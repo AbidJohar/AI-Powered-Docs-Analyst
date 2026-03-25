@@ -30,8 +30,8 @@ app.use(errorHandler);
 const start = async () => {
   await prisma.$connect();
   // await initDB();
-  app.listen(PORT, () => {
-    console.log(`Server running at http://localhost:${PORT}`);
+  app.listen(PORT as number, "0.0.0.0", () => {
+    console.log(`Server running at http://0.0.0.0:${PORT}`);
   });
 };
 

@@ -11,11 +11,21 @@ export const createDocument = async (
   });
 };
 
-export const getAllDocuments = async () => {
-  return await prisma.document.findMany({
-    orderBy: { createdAt: 'desc' },
-    include: { summaries: true }
-  });
+// documents.service.ts
+export const getAllDocuments = async (page: number, limit: number) => {
+  const skip = (page - 1) * limit;
+
+  const [documents, total] = await Promise.all([
+    prisma.document.findMany({
+      orderBy: { createdAt: 'desc' },
+      include: { summaries: true },
+      skip,
+      take: limit,
+    }),
+    prisma.document.count(),
+  ]);
+
+  return { documents, total };
 };
 
 export const getDocumentById = async (id: string) => {
@@ -47,6 +57,6 @@ export const saveQuery = async (
 export const getQueryHistory = async (documentId: string) => {
   return await prisma.query.findMany({
     where: { documentId },
-    orderBy: { askedAt: 'desc' }
+    orderBy: { askedAt: 'asc' }
   });
 };

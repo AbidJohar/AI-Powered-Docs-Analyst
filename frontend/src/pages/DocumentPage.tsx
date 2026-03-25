@@ -1,89 +1,79 @@
-import React, { useState } from 'react';
-import { PanelLeftClose, PanelLeftOpen, Plus } from "lucide-react";
-import HistoryPanel from '../components/document/HistoryPanel';
-import DocumentHeader from '../components/document/DocumentHeader';
-import SummaryPanel from '../components/document/SummaryPanel';
-import ChatPanel from '../components/document/ChatPanel';
 
-const DocumentPage: React.FC = () => {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+import { useNavigate } from "react-router-dom";
+import { useUploadDocument } from "../hooks/useDocuments";
+import { Loader2 } from "lucide-react";
+import { useEffect } from "react";
+import { toast } from "sonner";
+
+const DocumentPage = () => {
+  const navigate = useNavigate();
+  const { mutate: upload, isPending: isUploading, isError, error } = useUploadDocument();
+
+  useEffect(() => {
+    if (!isError || !error) return;
+    const status = (error as any)?.response?.status;
+    const message = (error as any)?.response?.data?.message;
+
+    if (status === 429) {
+      toast.error(message, {
+        style: {
+          background: "#1a0a0a",
+          border: "1px solid #ef444430",
+          color: "#f87171",
+        },
+        icon: "🚫",
+      });
+    }
+  }, [isError, error]);
+
+  const handleUpload = () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".pdf,.doc,.docx,.txt";
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+      upload(file, {
+        onSuccess: (response) => {
+          const id = response.data.document.id;
+          if (id) navigate(`/chat-panel/${id}`);
+        },
+      });
+    };
+    input.click();
+  };
 
   return (
-    <div className="flex h-screen w-full bg-[#08060d] text-slate-300 font-sans overflow-hidden">
-      
-      {/* SIDEBAR */}
-      <aside 
-        className={`
-          ${isSidebarOpen ? 'w-72' : 'w-0 md:w-16'} 
-          fixed md:relative z-50 h-full shrink-0 border-r border-white/5 bg-[#050508] 
-          flex flex-col transition-all duration-300 ease-in-out overflow-hidden
-        `}
-      >
-        {/* Sidebar Content - Only show full UI when open */}
-        <div className={`flex flex-col h-full ${!isSidebarOpen && 'md:items-center'}`}>
-          <div className="p-4 flex items-center justify-between">
-            {isSidebarOpen && (
-               <span className="text-white font-bold tracking-tighter text-sm animate-in fade-in">
-                 DocAnalyst.ai
-               </span>
-            )}
-            <button 
-              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="p-2 hover:bg-white/5 rounded-lg text-slate-400 transition-colors"
-              title={isSidebarOpen ? "Close sidebar" : "Open sidebar"}
-            >
-              {isSidebarOpen ? <PanelLeftClose size={20} /> : <PanelLeftOpen size={20} />}
-            </button>
+    <div className="flex flex-col items-center justify-center h-full gap-6 text-center px-6">
+      {isUploading ? (
+        <div className="flex flex-col items-center gap-4 w-full max-w-sm">
+          <div className="h-14 w-14 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
+            <Loader2 size={26} className="animate-spin" />
           </div>
-
-          <div className="p-4">
-            <button className={`
-              flex items-center justify-center gap-2 rounded-xl bg-white/5 border border-white/10 
-              hover:bg-white/10 transition-all text-sm font-medium
-              ${isSidebarOpen ? 'w-full py-2.5 px-4' : 'w-10 h-10 p-0'}
-            `}>
-              <Plus size={18} />
-              {isSidebarOpen && <span className="animate-in fade-in">New Chat</span>}
-            </button>
-          </div>
-
-          {/* Hide History Panel text when collapsed but keep icons for "Pro" feel */}
-          <div className="flex-1 overflow-y-auto">
-            <HistoryPanel showFull={isSidebarOpen} />
+          <p className="text-slate-300 font-medium">Uploading & analyzing…</p>
+          <p className="text-slate-600 text-sm">This may take a few seconds</p>
+          <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+            <div className="h-full bg-cyan-500 rounded-full animate-pulse w-3/4" />
           </div>
         </div>
-      </aside>
-
-      {/* MOBILE OVERLAY BACKDROP */}
-      {isSidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 md:hidden" 
-          onClick={() => setIsSidebarOpen(false)}
-        />
+      ) : (
+        <div className="flex flex-col items-center gap-4">
+          <p className="text-slate-300 font-medium">No document selected</p>
+          <p className="text-slate-600 text-sm">Upload a document to get started.</p>
+          {/* Show backend error message here */}
+          {isError && (error as any)?.response?.status !== 429 && (
+            <p className="text-red-400 text-sm bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-2">
+              {(error as any)?.response?.data?.message ?? (error as Error).message}
+            </p>
+          )}
+          <button
+            onClick={handleUpload}
+            className="mt-2 px-6 py-2.5 bg-cyan-500 text-black rounded-xl text-sm font-bold hover:bg-cyan-400 transition-all"
+          >
+            Upload Document
+          </button>
+        </div>
       )}
-
-      {/* MAIN CONTENT AREA */}
-      <main className="flex-1 flex flex-col relative overflow-hidden bg-[#08060d]">
-        <DocumentHeader 
-          // Show toggle on header if sidebar is fully closed
-          onMenuClick={!isSidebarOpen ? () => setIsSidebarOpen(true) : undefined} 
-        />
-
-        <div className="flex-1 overflow-y-auto custom-scrollbar">
-          <div className="max-w-4xl mx-auto px-6 py-10 w-full">
-          
-               <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                 <SummaryPanel />
-               
-               </div>
-            
-              <div className="animate-in fade-in duration-500">
-                 <ChatPanel isSidebarOpen={isSidebarOpen} />
-              </div>
-          
-          </div>
-        </div>
-      </main>
     </div>
   );
 };

@@ -11,7 +11,7 @@ import {
   extractTextFromFile,
   summarizeDocument,
   answerQuestion,
-} from '../services/anthropicService';
+} from '../services/geminiService';
 import { AskQuestionBody, ApiResponse } from '../types';
 
 // POST /api/upload
@@ -27,8 +27,8 @@ export const uploadDocument = async (
       res.status(400).json({ success: false, error: 'No file uploaded' });
       return;
     }
-    console.log("req:",req.file);
-    
+    // console.log("req:",req.file);
+
     const { originalname, path: filePath, mimetype, size } = req.file;
 
     // Save document record to DB
@@ -43,22 +43,47 @@ export const uploadDocument = async (
       success: true,
       data: { document, summary },
     });
-  } catch (error) {
-    console.log("Error in next:",error);
-    
+  } catch (error: any) {
+    console.log("error:", error);
+
+    if (error.code === 429) {
+      res.status(429).json({
+        success: false,
+        // error: "rate_limit",
+        message: error.message,
+        // retryAfter: error.retryAfter ?? 36,
+      });
+      return;
+    }
+
     next(error);
   }
 };
 
 // GET /api/documents
+// documents.controller.ts
 export const listDocuments = async (
-  _req: Request,
+  req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
   try {
-    const documents = await getAllDocuments();
-    res.json({ success: true, data: documents });
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const limit = Math.max(1, parseInt(req.query.limit as string) || 6); // default 6
+
+    const { documents, total } = await getAllDocuments(page, limit);
+
+    res.json({
+      success: true,
+      data: documents,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+        hasMore: page * limit < total,
+      },
+    });
   } catch (error) {
     next(error);
   }
@@ -90,6 +115,7 @@ export const askQuestion = async (
 ): Promise<void> => {
   try {
     const { document_id, question } = req.body as AskQuestionBody;
+    // console.log("question and id:", question, " ", document_id);
 
     if (!document_id || !question) {
       res.status(400).json({ success: false, error: 'document_id and question are required' });
@@ -102,15 +128,29 @@ export const askQuestion = async (
       return;
     }
 
+
     // Re-extract text from saved file
     const content = await extractTextFromFile(document.filePath, document.fileType);
+    // console.log("content:", content);
+
     const answer = await answerQuestion(content, question, document.filename);
+    // console.log("Answer:", answer);
 
     // Save Q&A to history
     const query = await saveQuery(document_id, question, answer);
 
     res.json({ success: true, data: { question, answer, query } });
-  } catch (error) {
+  } catch (error: any) {
+
+    if (error.code === 429) {
+      res.status(429).json({
+        success: false,
+        message: error.message,
+        
+      });
+      return;
+    }
+
     next(error);
   }
 };

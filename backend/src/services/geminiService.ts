@@ -1,6 +1,7 @@
 import fs from 'fs';
-import path from 'path';
 import { geminiClient } from '../config/gemini';
+import nodexlsx from "node-xlsx";
+import handleGeminiError from '../middleware/handleGeminiError';
 
 // Extract raw text from uploaded file
 export const extractTextFromFile = async (filePath: string, fileType: string): Promise<string> => {
@@ -16,13 +17,34 @@ export const extractTextFromFile = async (filePath: string, fileType: string): P
     return data.text;
   }
 
+    if (
+    fileType === 'application/vnd.ms-excel' ||
+    fileType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  ) {
+    const sheets = nodexlsx.parse(filePath);
+    return sheets
+      .map((sheet) => {
+        const rows = sheet.data
+          .map((row: unknown[]) =>
+            row.map((cell) => (cell == null ? '' : String(cell))).join(',')
+          )
+          .join('\n');
+        return `Sheet: ${sheet.name}\n${rows}`;
+      })
+      .join('\n\n');
+  }
+
   throw new Error(`Unsupported file type: ${fileType}`);
 };
 
+ 
+
 // Summarize document content via Anthropic
-export const summarizeDocument = async (content: string, filename: string): Promise<string> => {
-  const response = await geminiClient.models.generateContent({
-    model: "gemini-2.5-flash-lite",   
+export const summarizeDocument = async (content: string, filename: string): Promise<string | any> => {
+
+  try {
+    const response = await geminiClient.models.generateContent({
+    model: "gemini-2.5-flash-lite",
     contents: `You are a document analyst. Analyze the following document named "${filename}" and provide:
 1. A concise summary (2-3 sentences)
 2. Key insights or important points (bullet list)
@@ -37,6 +59,12 @@ Be concise and professional.`,
   });
 
   return response.text ?? 'Could not generate summary.';
+    
+  } catch (error : any) {
+    handleGeminiError(error);
+  }
+
+
 };
 
 
@@ -45,8 +73,10 @@ export const answerQuestion = async (
   content: string,
   question: string,
   filename: string
-): Promise<string> => {
-  const response = await geminiClient.models.generateContent({
+): Promise<string  | any> => {
+
+  try {
+    const response = await geminiClient.models.generateContent({
     model: "gemini-2.5-flash-lite",
     contents: `
 You are a document analyst.
@@ -76,4 +106,10 @@ Answer clearly and concisely following the formatting rules above.
   });
 
   return response.text ?? 'Could not generate an answer.';
+    
+  } catch (error : any) {
+    handleGeminiError(error);
+  }
+
+  
 };

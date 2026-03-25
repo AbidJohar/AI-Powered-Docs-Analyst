@@ -121,7 +121,7 @@ const HeroSection: React.FC = () => {
                 </p>
 
                 <div className="flex flex-col sm:flex-row gap-5 mt-3 pointer-events-auto">
-                    <Link  to="/chat-panel" className="px-10 py-4 font-bold text-black transition-all bg-white rounded-full hover:bg-cyan-400 hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(255,255,255,0.3)]">
+                    <Link  to="/chat-panel" className="px-10 py-4 font-bold text-black transition-all border-l-4 border-r-4 border-black bg-white rounded-full   hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(255,255,255,0.5)]">
                         Analyze Now ( Free )
                     </Link>
 
