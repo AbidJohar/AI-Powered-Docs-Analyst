@@ -1,3 +1,4 @@
+import { Request } from "express";
 export interface Document {
   id: string;
   filename: string;
@@ -35,4 +36,12 @@ export interface ApiResponse<T> {
   success: boolean;
   data?: T;
   error?: string;
+}
+
+
+// Extend Express Request to include user
+export interface AuthRequest extends Request {
+  user?: {
+    id: string;
+  };
 }

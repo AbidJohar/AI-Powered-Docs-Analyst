@@ -12,7 +12,9 @@ import {
   summarizeDocument,
   answerQuestion,
 } from '../services/geminiService';
-import { AskQuestionBody, ApiResponse } from '../types';
+import { AskQuestionBody, AuthRequest } from '../types';
+
+
 
 // POST /api/upload
 export const uploadDocument = async (
@@ -22,6 +24,12 @@ export const uploadDocument = async (
 ): Promise<void> => {
   // console.log("req:",req);
   try {
+    const userId = (req as AuthRequest).user?.id;
+
+    if (!userId) {
+      res.status(401).json({ success: false, message: "Unauthorized" });
+      return;
+    }
 
     if (!req.file) {
       res.status(400).json({ success: false, error: 'No file uploaded' });
@@ -32,7 +40,7 @@ export const uploadDocument = async (
     const { originalname, path: filePath, mimetype, size } = req.file;
 
     // Save document record to DB
-    const document = await createDocument(originalname, filePath, mimetype, size);
+    const document = await createDocument(originalname, filePath, mimetype, size, userId);
 
     // Extract text and generate summary
     const content = await extractTextFromFile(filePath, mimetype);
@@ -44,14 +52,11 @@ export const uploadDocument = async (
       data: { document, summary },
     });
   } catch (error: any) {
-    console.log("error:", error);
 
     if (error.code === 429) {
       res.status(429).json({
         success: false,
-        // error: "rate_limit",
         message: error.message,
-        // retryAfter: error.retryAfter ?? 36,
       });
       return;
     }
@@ -68,10 +73,17 @@ export const listDocuments = async (
   next: NextFunction
 ): Promise<void> => {
   try {
+
+    const userId = (req as AuthRequest).user?.id;
+    if (!userId) {
+      res.status(401).json({ success: false, message: "Unauthorized" });
+      return;
+    }
+
     const page = Math.max(1, parseInt(req.query.page as string) || 1);
     const limit = Math.max(1, parseInt(req.query.limit as string) || 6); // default 6
 
-    const { documents, total } = await getAllDocuments(page, limit);
+    const { documents, total } = await getAllDocuments(page, limit, userId);
 
     res.json({
       success: true,
@@ -96,7 +108,13 @@ export const getDocument = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const document = await getDocumentById(req.params.id);
+    const userId = (req as AuthRequest).user?.id;
+    if (!userId) {
+      res.status(401).json({ success: false, message: "Unauthorized" });
+      return;
+    }
+
+    const document = await getDocumentById(req.params.id, userId);
     if (!document) {
       res.status(404).json({ success: false, error: 'Document not found' });
       return;
@@ -114,6 +132,12 @@ export const askQuestion = async (
   next: NextFunction
 ): Promise<void> => {
   try {
+    const userId = (req as AuthRequest).user?.id;
+    if (!userId) {
+      res.status(401).json({ success: false, message: "Unauthorized" });
+      return;
+    }
+
     const { document_id, question } = req.body as AskQuestionBody;
     // console.log("question and id:", question, " ", document_id);
 
@@ -122,7 +146,7 @@ export const askQuestion = async (
       return;
     }
 
-    const document = await getDocumentById(document_id);
+    const document = await getDocumentById(document_id, userId);
     if (!document) {
       res.status(404).json({ success: false, error: 'Document not found' });
       return;
@@ -131,10 +155,7 @@ export const askQuestion = async (
 
     // Re-extract text from saved file
     const content = await extractTextFromFile(document.filePath, document.fileType);
-    // console.log("content:", content);
-
     const answer = await answerQuestion(content, question, document.filename);
-    // console.log("Answer:", answer);
 
     // Save Q&A to history
     const query = await saveQuery(document_id, question, answer);
@@ -146,7 +167,6 @@ export const askQuestion = async (
       res.status(429).json({
         success: false,
         message: error.message,
-        
       });
       return;
     }
@@ -162,7 +182,19 @@ export const getHistory = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const history = await getQueryHistory(req.params.document_id);
+    const userId = (req as AuthRequest).user?.id;
+    if (!userId) {
+      res.status(401).json({ success: false, message: "Unauthorized" });
+      return;
+    }
+
+    const history = await getQueryHistory(req.params.document_id, userId);
+     
+    if (history === null) {
+      res.status(404).json({ success: false, error: 'Document not found' });
+      return;
+    }
+
     res.json({ success: true, data: history });
   } catch (error) {
     next(error);

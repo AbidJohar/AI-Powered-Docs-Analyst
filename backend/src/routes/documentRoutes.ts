@@ -8,8 +8,16 @@ import {
   askQuestion,
   getHistory,
 } from '../controllers/documentController';
+import authMiddleware from '../middleware/authMiddleware';
 
 const router = Router();
+
+
+// ─────────────────────────────────────────────────────────────
+//  DOCUMENTS ROUTES
+// ─────────────────────────────────────────────────────────────
+
+router.use(authMiddleware);
 
 router.post('/upload', (req: Request, res: Response, next: NextFunction) => {
   upload.single('document')(req, res, (err) => {

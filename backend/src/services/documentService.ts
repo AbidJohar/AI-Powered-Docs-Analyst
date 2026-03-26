@@ -4,33 +4,37 @@ export const createDocument = async (
   filename: string,
   filePath: string,
   fileType: string,
-  sizeBytes: number
+  sizeBytes: number,
+  userId: string
 ) => {
   return await prisma.document.create({
-    data: { filename, filePath, fileType, sizeBytes }
+    data: { filename, filePath, fileType, sizeBytes, userId }
   });
 };
 
 // documents.service.ts
-export const getAllDocuments = async (page: number, limit: number) => {
+export const getAllDocuments = async (page: number, limit: number, userId: string) => {
   const skip = (page - 1) * limit;
 
   const [documents, total] = await Promise.all([
     prisma.document.findMany({
+      where: { userId },   // ← only this user's docs
       orderBy: { createdAt: 'desc' },
       include: { summaries: true },
       skip,
       take: limit,
     }),
-    prisma.document.count(),
+    prisma.document.count({
+      where: { userId }
+    }),
   ]);
 
   return { documents, total };
 };
 
-export const getDocumentById = async (id: string) => {
+export const getDocumentById = async (id: string, userId: string) => {
   return await prisma.document.findUnique({
-    where: { id },
+    where: { id, userId },
     include: { summaries: true, queries: true }
   });
 };
@@ -54,9 +58,16 @@ export const saveQuery = async (
   });
 };
 
-export const getQueryHistory = async (documentId: string) => {
+export const getQueryHistory = async (documentId: string, userId: string) => {
+  // Verify doc belongs to user first
+  const document = await prisma.document.findFirst({
+    where: { id: documentId, userId },
+  });
+
+  if (!document) return null;
+
   return await prisma.query.findMany({
     where: { documentId },
-    orderBy: { askedAt: 'asc' }
+    orderBy: { askedAt: 'asc' },
   });
 };

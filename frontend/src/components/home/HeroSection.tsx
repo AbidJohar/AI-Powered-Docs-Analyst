@@ -1,8 +1,9 @@
 import React, { useRef } from 'react';
 import { Canvas, useFrame, extend, type ThreeElement } from '@react-three/fiber';
 import { shaderMaterial } from '@react-three/drei';
-import { Link } from 'react-router-dom';
+import {  useNavigate } from 'react-router-dom';
 import * as THREE from 'three';
+import { useAuth } from '../../context/AuthContext';
 
 
 
@@ -87,6 +88,16 @@ const ShaderPlane: React.FC = () => {
 };
 
 const HeroSection: React.FC = () => {
+    const { isAuthenticated } = useAuth();
+    const navigate = useNavigate();
+
+
+    const handleClick = () => {
+
+        navigate(isAuthenticated ? "/chat-panel" : "/google-login");
+
+    }
+
     return (
         <div className="relative w-full h-screen bg-[#050814] overflow-hidden text-white font-sans">
             {/* BACKGROUND: WebGL Layer */}
@@ -103,7 +114,7 @@ const HeroSection: React.FC = () => {
             {/* FOREGROUND: UI Layer */}
             <div className="relative z-10 flex flex-col items-center justify-center h-full max-w-6xl px-6 mx-auto text-center pointer-events-none">
                 <div className="px-4 py-1 mb-8 text-xs font-bold tracking-[0.2em] uppercase border rounded-full bg-cyan-500/5 text-cyan-400 border-cyan-500/20">
-                    Neural Document Engine 
+                    Neural Document Engine
                 </div>
 
                 <h1 className="mb-6 text-6xl md:text-8xl font-extrabold tracking-tighter">
@@ -121,9 +132,9 @@ const HeroSection: React.FC = () => {
                 </p>
 
                 <div className="flex flex-col sm:flex-row gap-5 mt-3 pointer-events-auto">
-                    <Link  to="/chat-panel" className="px-10 py-4 font-bold text-black transition-all border-l-4 border-r-4 border-black bg-white rounded-full   hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(255,255,255,0.5)]">
+                    <button onClick={handleClick} className="px-10 py-4 font-bold text-black transition-all border-l-4 border-r-4 border-black bg-white rounded-full   hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(255,255,255,0.5)]">
                         Analyze Now ( Free )
-                    </Link>
+                    </button>
 
                 </div>
             </div>

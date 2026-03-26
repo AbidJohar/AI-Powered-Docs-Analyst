@@ -1,0 +1,92 @@
+import { googleLoginService, refreshTokenService, logoutService } from "../services/authService";
+import { Request, Response } from "express";
+import { issueTokenCookies } from "../utility/authPureFunc";
+import { AuthRequest } from "../types";
+import { prisma } from "../config/db";
+
+// ─────────────────────────────────────────────────────────────
+//  GOOGLE LOGIN
+// ─────────────────────────────────────────────────────────────
+
+export const googleLogin = async (req: Request, res: Response) => {
+    try {
+        const result = await googleLoginService(req.body);
+        if (result.user) await issueTokenCookies(res, result.user);
+        return res.status(result.status).json(result.body);
+    } catch (err: any) {
+        return res.status(500).json({ success: false, message: err.message || "Failed to login." });
+    }
+};
+
+// ─────────────────────────────────────────────────────────────
+//  REFRESH TOKEN
+// ─────────────────────────────────────────────────────────────
+
+export const refreshToken = async (req: Request, res: Response) => {
+    try {
+        const token = req.cookies?.refreshToken;
+        
+        const result = await refreshTokenService(token);
+
+        if (result.user) await issueTokenCookies(res, result.user);
+
+        return res.status(result.status).json(result.body);
+    } catch (err: any) {
+        return res.status(500).json({ success: false, message: err.message || "Failed to refresh token." });
+    }
+};
+
+// ─────────────────────────────────────────────────────────────
+//  LOGOUT
+// ─────────────────────────────────────────────────────────────
+
+export const logout = async (req: Request, res: Response) => {
+    try {
+        const token = req.cookies?.refreshToken;
+
+        await logoutService(token);
+
+        // Clear both cookies
+        res.clearCookie("accessToken", { httpOnly: true, secure: true, sameSite: "strict" });
+        res.clearCookie("refreshToken", { httpOnly: true, secure: true, sameSite: "strict" });
+
+        return res.status(200).json({ success: true, message: "Logged out successfully." });
+    } catch (err: any) {
+        return res.status(500).json({ success: false, message: err.message || "Failed to logout." });
+    }
+};
+
+// ─────────────────────────────────────────────────────────────
+//  GET ME (verify session)
+// ─────────────────────────────────────────────────────────────
+
+export const getMe = async (req: Request, res: Response) => {
+    try {
+        const userId = (req as AuthRequest).user?.id;
+
+        if (!userId) {
+            return res.status(401).json({ success: false, message: "Not authenticated." });
+        }
+
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                avatar: true,
+            },
+        });
+
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found." });
+        }
+
+        return res.status(200).json({
+            success: true,
+            data: user,
+        });
+    } catch (err: any) {
+        return res.status(500).json({ success: false, message: err.message || "Failed to get user." });
+    }
+};

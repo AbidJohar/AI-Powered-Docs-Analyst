@@ -3,6 +3,7 @@ import axios from "axios";
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL, // replace with your backend URL
   headers: { "Content-Type": "application/json" },
+  withCredentials: true,
 });
 
 
@@ -39,12 +40,12 @@ export const uploadDocumentApi = async (file: File) => {
 };
 
 // List all documents
-export const listDocumentsApi = async (page : number = 1) => {
+export const listDocumentsApi = async (page: number = 1) => {
   const { data } = await api.get("/documents", {
-    params : {page , limit : 6}
+    params: { page, limit: 6 }
   });
   //  console.log("data:",data);
-   
+
   return data;
 };
 
