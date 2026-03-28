@@ -10,8 +10,8 @@ const router = Router();
 // ─────────────────────────────────────────────────────────────
 
 router.post('/google-login', googleLogin);
-router.post("/refresh",authMiddleware, refreshToken);
-router.get("/logout",authMiddleware, logout);
+router.post("/refresh", refreshToken);
+router.get("/logout", logout);
 router.get("/my-profile", authMiddleware, getMe);
 
 

@@ -22,6 +22,8 @@ const storage = multer.diskStorage({
 });
 
 const fileFilter = (_req: Request, file: Express.Multer.File, cb: FileFilterCallback) => {
+  //  console.log("in filter:",_req);
+   
   const allowedTypes = ['application/pdf', 'text/plain', 'text/csv', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
   if (allowedTypes.includes(file.mimetype)) {
     cb(null, true);

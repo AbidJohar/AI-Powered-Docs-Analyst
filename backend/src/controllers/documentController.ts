@@ -6,6 +6,7 @@ import {
   createSummary,
   saveQuery,
   getQueryHistory,
+  deleteDocumentService,
 } from '../services/documentService';
 import {
   extractTextFromFile,
@@ -15,14 +16,15 @@ import {
 import { AskQuestionBody, AuthRequest } from '../types';
 
 
+// ─────────────────────────────────────────────────────────────
+//  UPLOAD DOCUMENT
+// ─────────────────────────────────────────────────────────────
 
-// POST /api/upload
 export const uploadDocument = async (
   req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
-  // console.log("req:",req);
   try {
     const userId = (req as AuthRequest).user?.id;
 
@@ -35,7 +37,6 @@ export const uploadDocument = async (
       res.status(400).json({ success: false, error: 'No file uploaded' });
       return;
     }
-    // console.log("req:",req.file);
 
     const { originalname, path: filePath, mimetype, size } = req.file;
 
@@ -65,8 +66,10 @@ export const uploadDocument = async (
   }
 };
 
-// GET /api/documents
-// documents.controller.ts
+// ─────────────────────────────────────────────────────────────
+//  DOCUMENT LIST
+// ─────────────────────────────────────────────────────────────
+  
 export const listDocuments = async (
   req: Request,
   res: Response,
@@ -101,7 +104,9 @@ export const listDocuments = async (
   }
 };
 
-// GET /api/documents/:id
+// ─────────────────────────────────────────────────────────────
+// GET DOCUMENT BY ID
+// ─────────────────────────────────────────────────────────────
 export const getDocument = async (
   req: Request,
   res: Response,
@@ -125,7 +130,27 @@ export const getDocument = async (
   }
 };
 
-// POST /api/ask
+// ─────────────────────────────────────────────────────────────
+// DELETE DOCUMENT BY ID
+// ─────────────────────────────────────────────────────────────
+
+export const deleteDocument = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const userId = (req as AuthRequest).user?.id;
+        if (!userId) return res.status(401).json({ success: false, message: "Unauthorized" });
+
+        const result = await deleteDocumentService(req.params.id, userId);
+        
+        return res.status(200).json({success: result, message: "Document deleted successfully"});
+    } catch (err: any) {
+        next(err); // Pass to global error handler
+    }
+};
+
+
+// ─────────────────────────────────────────────────────────────
+//  ASK QUESTION
+// ─────────────────────────────────────────────────────────────
 export const askQuestion = async (
   req: Request,
   res: Response,
@@ -175,7 +200,9 @@ export const askQuestion = async (
   }
 };
 
-// GET /api/history/:document_id
+// ─────────────────────────────────────────────────────────────
+//  GET HISTORY BY ID
+// ─────────────────────────────────────────────────────────────
 export const getHistory = async (
   req: Request,
   res: Response,
@@ -189,7 +216,7 @@ export const getHistory = async (
     }
 
     const history = await getQueryHistory(req.params.document_id, userId);
-     
+
     if (history === null) {
       res.status(404).json({ success: false, error: 'Document not found' });
       return;

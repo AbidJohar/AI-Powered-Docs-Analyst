@@ -7,7 +7,7 @@ const requiredEnvVars = [
     "GOOGLE_CLIENT_ID",
     "GOOGLE_CLIENT_SECRET",
     "GEMINI_API_KEY",
-    // "FRONTEND_URL",
+    "FRONTEND_URL",
     "NODE_ENV",
 ] as const;
 

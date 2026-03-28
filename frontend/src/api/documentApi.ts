@@ -1,32 +1,32 @@
-import axios from "axios";
+import { api } from "./client";
 
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL, // replace with your backend URL
-  headers: { "Content-Type": "application/json" },
-  withCredentials: true,
-});
+// const api = axios.create({
+//   baseURL: import.meta.env.VITE_API_BASE_URL, // replace with your backend URL
+//   headers: { "Content-Type": "application/json" },
+//   withCredentials: true,
+// });
 
 
-// Intercept errors and extract backend message
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    const status = error.response?.status;
-    const backendMessage = error.response?.data?.message; // use message not error
+// // Intercept errors and extract backend message
+// api.interceptors.response.use(
+//   (response) => response,
+//   (error) => {
+//     const status = error.response?.status;
+//     const backendMessage = error.response?.data?.message; // use message not error
 
-    // Let 429 pass through as-is so onError can handle it properly
-    if (status === 429) {
-      return Promise.reject(error); // keeps error.response intact
-    }
+//     // Let 429 pass through as-is so onError can handle it properly
+//     if (status === 429) {
+//       return Promise.reject(error); // keeps error.response intact
+//     }
 
-    // For other errors, throw with the backend message
-    if (backendMessage) {
-      return Promise.reject(new Error(backendMessage));
-    }
+//     // For other errors, throw with the backend message
+//     if (backendMessage) {
+//       return Promise.reject(new Error(backendMessage));
+//     }
 
-    return Promise.reject(error);
-  }
-);
+//     return Promise.reject(error);
+//   }
+// );
 
 // Upload a document (multipart/form-data)
 export const uploadDocumentApi = async (file: File) => {

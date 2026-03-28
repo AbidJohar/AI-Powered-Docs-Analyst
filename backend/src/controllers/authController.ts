@@ -1,17 +1,20 @@
 import { googleLoginService, refreshTokenService, logoutService } from "../services/authService";
 import { Request, Response } from "express";
-import { issueTokenCookies } from "../utility/authPureFunc";
+import { issueTokenCookies } from "../utility/authHelperFunc";
 import { AuthRequest } from "../types";
 import { prisma } from "../config/db";
+import env from "../config/env";
 
 // ─────────────────────────────────────────────────────────────
 //  GOOGLE LOGIN
 // ─────────────────────────────────────────────────────────────
 
 export const googleLogin = async (req: Request, res: Response) => {
+
     try {
         const result = await googleLoginService(req.body);
         if (result.user) await issueTokenCookies(res, result.user);
+
         return res.status(result.status).json(result.body);
     } catch (err: any) {
         return res.status(500).json({ success: false, message: err.message || "Failed to login." });
@@ -23,9 +26,10 @@ export const googleLogin = async (req: Request, res: Response) => {
 // ─────────────────────────────────────────────────────────────
 
 export const refreshToken = async (req: Request, res: Response) => {
+    console.log(" refreshToken in cookie:", req.cookies.refreshToken); // ← add this
     try {
         const token = req.cookies?.refreshToken;
-        
+
         const result = await refreshTokenService(token);
 
         if (result.user) await issueTokenCookies(res, result.user);
@@ -43,12 +47,21 @@ export const refreshToken = async (req: Request, res: Response) => {
 export const logout = async (req: Request, res: Response) => {
     try {
         const token = req.cookies?.refreshToken;
-
         await logoutService(token);
 
-        // Clear both cookies
-        res.clearCookie("accessToken", { httpOnly: true, secure: true, sameSite: "strict" });
-        res.clearCookie("refreshToken", { httpOnly: true, secure: true, sameSite: "strict" });
+        res.clearCookie("accessToken", {
+            httpOnly: true,
+            secure: env.nodeEnv === "production",
+            sameSite: env.nodeEnv === "production" ? "none" : "lax",
+            path: "/",
+        });
+
+        res.clearCookie("refreshToken", {
+            httpOnly: true,
+            secure: env.nodeEnv === "production",
+            sameSite: env.nodeEnv === "production" ? "none" : "lax",
+            path: "/api/auth/refresh",
+        });
 
         return res.status(200).json({ success: true, message: "Logged out successfully." });
     } catch (err: any) {

@@ -10,7 +10,7 @@ const ProtectedRoute = () => {
     </div>
   );
 
-  return isAuthenticated ? <Outlet /> : <Navigate to="/" replace />;
+  return isAuthenticated ? <Outlet /> : <Navigate to="/google-login" replace />;
 };
 
 export default ProtectedRoute;

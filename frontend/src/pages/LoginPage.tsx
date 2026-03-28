@@ -7,7 +7,7 @@ const LoginPage = () => {
 
     const login = useGoogleLogin({
         onSuccess: (response) => {
-            console.log("Response:", response);
+            // console.log("Response:", response);
             googleLogin(response.code)
         },
         flow: "auth-code",
@@ -31,7 +31,7 @@ const LoginPage = () => {
                 <button
                     onClick={() => login()}
                     disabled={isPending}
-                    className="w-full flex items-center justify-center gap-3 px-6 py-3 bg-white text-black rounded-xl text-sm font-semibold hover:bg-slate-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full flex items-center justify-center gap-3 px-6 py-3 bg-white text-black rounded-full text-sm font-semibold hover:bg-slate-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     {isPending ? (
                         <Loader2 size={18} className="animate-spin" />

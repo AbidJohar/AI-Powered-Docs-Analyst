@@ -29,7 +29,7 @@ const DocumentPage = () => {
   const handleUpload = () => {
     const input = document.createElement("input");
     input.type = "file";
-    input.accept = ".pdf,.doc,.docx,.txt";
+    input.accept = ".pdf,.txt,.csv,.xls,.xlsx";
     input.onchange = (e) => {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (!file) return;

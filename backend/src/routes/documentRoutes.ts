@@ -7,6 +7,7 @@ import {
   getDocument,
   askQuestion,
   getHistory,
+  deleteDocument,
 } from '../controllers/documentController';
 import authMiddleware from '../middleware/authMiddleware';
 
@@ -17,10 +18,12 @@ const router = Router();
 //  DOCUMENTS ROUTES
 // ─────────────────────────────────────────────────────────────
 
-router.use(authMiddleware);
 
-router.post('/upload', (req: Request, res: Response, next: NextFunction) => {
+
+router.post('/upload', authMiddleware, (req: Request, res: Response, next: NextFunction) => {
   upload.single('document')(req, res, (err) => {
+    console.log("Error while uploading:", err);
+
     if (err instanceof multer.MulterError) {
       // Handles file size, too many files, etc.
       if (err.code === 'LIMIT_FILE_SIZE') {
@@ -40,15 +43,16 @@ router.post('/upload', (req: Request, res: Response, next: NextFunction) => {
 }, uploadDocument);
 
 // List all uploaded documents
-router.get('/documents', listDocuments);
+router.get('/documents', authMiddleware, listDocuments);
 
 // Get a single document with its summary
-router.get('/documents/:id', getDocument);
+router.get('/documents/:id', authMiddleware, getDocument);
 
-// Ask a question about a document
-router.post('/ask', askQuestion);
+// Delete a single document
+router.delete('/documents/:id', authMiddleware, deleteDocument);
+ 
+router.post('/ask', authMiddleware, askQuestion);
 
-// Get Q&A history for a document
-router.get('/history/:document_id', getHistory);
+router.get('/history/:document_id', authMiddleware, getHistory);
 
 export default router;

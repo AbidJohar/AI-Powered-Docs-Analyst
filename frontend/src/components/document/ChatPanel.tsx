@@ -18,13 +18,13 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ isSidebarOpen, documentId }) => {
 
   // console.log("history:", history);
   // handle error with useEffect
-useEffect(() => {
-  if (!isError || !error) return;
-  const status = (error as any)?.response?.status;
-  const message = (error as any)?.response?.data?.message;
+  useEffect(() => {
+    if (!isError || !error) return;
+    const status = (error as any)?.response?.status;
+    const message = (error as any)?.response?.data?.message;
 
-  if (status === 429) {
-    toast.error(message, {
+    if (status === 429) {
+      toast.error(message, {
         style: {
           background: "#1a0a0a",
           border: "1px solid #ef444430",
@@ -32,10 +32,10 @@ useEffect(() => {
         },
         icon: "🚫",
       });
-  } else {
-    toast.error("Something went wrong.");
-  }
-}, [isError, error]);
+    } else {
+      toast.error("Something went wrong.");
+    }
+  }, [isError, error]);
 
 
   // Auto-scroll to bottom on new messages
@@ -58,7 +58,7 @@ useEffect(() => {
   };
 
   return (
-    <div className="flex flex-col  gap-6 pb-24 mt-5">
+    <div className="flex flex-col  gap-6 pb-48 mt-5">
       {/* ── History ── */}
       {historyLoading ? (
         <div className="flex items-center gap-2 text-slate-500 text-sm">
@@ -84,7 +84,7 @@ useEffect(() => {
                   </p>
                 </div>
                 <div className="h-8 w-8 rounded-full bg-white/5 border-r-[1.7px] border-white/60 flex items-center justify-center text-slate-400 shrink-0">
-                  <User size={16}   />
+                  <User size={16} />
                 </div>
               </div>
 
@@ -118,7 +118,7 @@ useEffect(() => {
 
       {/* Pending indicator */}
       {isPending && (
-        <div className="flex gap-4 items-start animate-in fade-in">
+        <div className="flex gap-4 items-star animate-in fade-in mb-8">
           <div className="h-8 w-8 rounded-lg bg-cyan-500/20 flex items-center justify-center text-cyan-400 shrink-0">
             <Bot size={18} />
           </div>
@@ -133,7 +133,7 @@ useEffect(() => {
       {/* ── Floating Input ── */}
       <div
         className={`
-         z-50 fixed bottom-2 right-0 flex justify-center px-7 transition-all duration-300
+         z-50 fixed bottom-6 right-0 flex  justify-center px-7 transition-all duration-300
           ${isSidebarOpen ? "left-52" : "left-0 md:left-10"}
         `}
       >
@@ -145,13 +145,13 @@ useEffect(() => {
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
               disabled={isPending}
-              className="w-full bg-[#16171d] border border-white/10 rounded-2xl py-4 px-6 pr-14 text-white focus:outline-none focus:border-cyan-500/50 placeholder:text-slate-600 disabled:opacity-50 transition-colors"
+              className="w-full bg-[#16171d] border border-white/10 rounded-l-full rounded-r-full py-4 px-6 pr-14 text-white focus:outline-none focus:border-cyan-500/50 placeholder:text-slate-600 disabled:opacity-50 transition-colors"
               placeholder="Ask a question about the document…"
             />
             <button
               onClick={handleSend}
               disabled={!input.trim() || isPending}
-              className="absolute items-center justify-center right-3 top-3 p-2.5 bg-cyan-500 rounded-xl text-black hover:bg-cyan-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="absolute items-center justify-center right-3 top-2.5 p-2.5 bg-cyan-500 rounded-full text-black hover:bg-cyan-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {isPending ? (
                 <Loader2 size={18} className="animate-spin" />

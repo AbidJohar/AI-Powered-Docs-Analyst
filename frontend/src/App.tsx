@@ -7,24 +7,29 @@ import { Toaster } from "sonner";
 import ProtectedRoute from "./components/ProtectedRoute";
 import LoginPage from "./pages/LoginPage";
 import NotFoundPage from "./pages/NotFoundPage";
+import PublicRoute from "./components/PublicRoute";
 
 function App() {
-
   return (
     <>
       <Toaster position="top-center" />
       <Routes>
-
         <Route path="/" element={<HomePage />} />
-        <Route path="/google-login" element={<LoginPage />} />
         <Route path="*" element={<NotFoundPage />} />
-        <Route element={<ProtectedRoute />} >
-          {/* All routes inside here share the same Layout */}
+
+        {/* Public only — logged in users get redirected away */}
+        <Route element={<PublicRoute />}>
+          <Route path="/google-login" element={<LoginPage />} />
+        </Route>
+
+        {/* Protected — logged out users get redirected to login */}
+        <Route element={<ProtectedRoute />}>
           <Route element={<MainLayout />}>
             <Route path="/chat-panel" element={<DocumentPage />} />
             <Route path="/chat-panel/:documentId" element={<ChatPage />} />
           </Route>
         </Route>
+
       </Routes>
     </>
   );

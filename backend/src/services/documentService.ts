@@ -39,6 +39,19 @@ export const getDocumentById = async (id: string, userId: string) => {
   });
 };
 
+
+export const deleteDocumentService = async (id: string, userId: string) => {
+  const result = await prisma.document.deleteMany({
+    where: { id, userId }
+  });
+
+  if (result.count === 0) {
+    return null;
+  }
+
+  return true;
+}; 
+
 export const createSummary = async (
   documentId: string,
   summaryText: string

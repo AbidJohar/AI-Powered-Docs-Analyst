@@ -1,9 +1,11 @@
 import React, { useRef, useState, useEffect } from "react";
-import { Menu, Share2, Copy, Check, X, Home, LogOut } from "lucide-react";
-import { useUploadDocument } from "../../hooks/useDocuments";
+import { Menu, Share2, Copy, Check, X, Home, LogOut, Loader2, Plus } from "lucide-react";
+// import { useUploadDocument } from "../../hooks/useDocuments";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useLogout } from "../../hooks/useAuth";
+import { useUploadDocument } from "../../hooks/useDocuments";
+import { toast } from "sonner";
 
 interface DocumentHeaderProps {
   onMenuClick?: () => void;
@@ -13,14 +15,12 @@ interface DocumentHeaderProps {
 
 const DocumentHeader: React.FC<DocumentHeaderProps> = ({
   onMenuClick,
-  onDocumentUploaded,
   shareUrl,
 }) => {
-  const fileRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const { mutate: upload } = useUploadDocument();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const {mutate : upload, isPending : isUploading, isError, error} = useUploadDocument();
   const { mutate: logout, isPending: isLoggingOut } = useLogout();
 
   const [showShare, setShowShare] = useState(false);
@@ -39,16 +39,40 @@ const DocumentHeader: React.FC<DocumentHeaderProps> = ({
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    upload(file, {
-      onSuccess: (data) => {
-        const newId = data._id ?? data.id ?? data.documentId;
-        if (newId) onDocumentUploaded?.(newId);
-      },
-    });
-    e.target.value = "";
+
+  useEffect(() => {
+      if (!isError || !error) return;
+      const status = (error as any)?.response?.status;
+      const message = (error as any)?.response?.data?.message;
+  
+      if (status === 429) {
+        toast.error(message, {
+          style: {
+            background: "#1a0a0a",
+            border: "1px solid #ef444430",
+            color: "#f87171",
+          },
+          icon: "🚫",
+        });
+      }
+    }, [isError, error]);
+
+
+  const handleUpload = () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".pdf,.txt,.csv,.xls,.xlsx";
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+      upload(file, {
+        onSuccess: (response) => {
+          const id = response.data.document.id;
+          if (id) navigate(`/chat-panel/${id}`);
+        },
+      });
+    };
+    input.click();
   };
 
   const handleCopy = async () => {
@@ -84,7 +108,18 @@ const DocumentHeader: React.FC<DocumentHeaderProps> = ({
           <span className="hidden sm:inline">Home</span>
         </button>
 
-        {/* Divider */}
+
+        <div className="h-5 w-px bg-white/10" />
+        {/* open upload section */}
+        <button
+          onClick={handleUpload}
+          disabled={isUploading}
+          className="flex items-center gap-1.5 px-3 py-1.5 hover:rounded-lg text-slate-400 text-xs font-medium hover:bg-white/5 hover:text-slate-200 border border-transparent hover:border-white/10 transition-all"
+        >
+          {isUploading ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
+          <span className="hidden sm:inline">{isUploading ? "Uploading..." : "Open Upload"}</span>
+        </button>
+
         <div className="h-5 w-px bg-white/10" />
 
         {/* Share */}
@@ -96,6 +131,7 @@ const DocumentHeader: React.FC<DocumentHeaderProps> = ({
             <Share2 size={14} />
             <span className="hidden sm:inline">Share</span>
           </button>
+
 
           {showShare && (
             <div className="absolute right-0 mt-2 w-44 rounded-xl border border-white/10 bg-[#0e0b1a] shadow-2xl shadow-black/60 overflow-hidden z-50">
@@ -151,13 +187,20 @@ const DocumentHeader: React.FC<DocumentHeaderProps> = ({
           {/* Avatar + Name */}
           <div className="flex items-center gap-2 px-2 py-1.5">
             {user?.avatar ? (
-              <img src={user.avatar} alt={user.name} className="w-6 h-6 rounded-full object-cover ring-1 ring-white/20" />
+              <img
+                src={user.avatar}
+                alt={user.name}
+                onError={(e) => {
+                  e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=0D8ABC&color=fff`;
+
+                }}
+                className="w-6 h-6 rounded-full object-cover ring-1 ring-white/20" />
             ) : (
               <div className="w-6 h-6 rounded-full bg-cyan-500/20 flex items-center justify-center text-cyan-400 text-[11px] font-bold ring-1 ring-cyan-500/30">
                 {user?.name?.charAt(0).toUpperCase()}
               </div>
             )}
-            <span className="hidden md:inline text-xs text-slate-300 font-medium max-w-[120px] truncate">
+            <span className="hidden md:inline text-xs text-slate-300 font-medium max-w-30 truncate">
               {user?.name}
             </span>
           </div>

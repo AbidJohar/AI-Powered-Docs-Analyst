@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { Canvas, useFrame, extend, type ThreeElement } from '@react-three/fiber';
 import { shaderMaterial } from '@react-three/drei';
-import {  useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import * as THREE from 'three';
 import { useAuth } from '../../context/AuthContext';
 
@@ -94,7 +94,11 @@ const HeroSection: React.FC = () => {
 
     const handleClick = () => {
 
-        navigate(isAuthenticated ? "/chat-panel" : "/google-login");
+        if (isAuthenticated) {
+            navigate("/chat-panel");
+        } else {
+            navigate("/google-login")
+        }
 
     }
 

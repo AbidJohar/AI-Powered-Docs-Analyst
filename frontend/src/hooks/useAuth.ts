@@ -7,14 +7,18 @@ export const queryKeys = {
 };
 
 // ─── Get current user ─────────────────────────────────────────
-export const useMe = () =>
-  useQuery({
-    queryKey: queryKeys.me,
+export const useMe = () => {
+  return useQuery({
+    queryKey: ['me'],
     queryFn: getMeApi,
-    select: (response) => response.data,
-    retry: false,        // don't retry on 401 — user is just not logged in
-    staleTime: 1000 * 60 * 5, // 5 min
+    // select allows you to transform the data before returning it
+    select: (response) => response?.data ?? null, // only return the 'data' property
+    retry: false,                // ← no retries on failure
+    refetchOnWindowFocus: false, // ← no refetch on tab switch
+    refetchOnMount: true,       // ← no refetch on remount
   });
+}
+
 
 // ─── Google Login ─────────────────────────────────────────────
 export const useGoogleLogin = () => {
@@ -24,13 +28,12 @@ export const useGoogleLogin = () => {
   return useMutation({
     mutationFn: (code: string) => googleLoginApi(code),
     onSuccess: async () => {
-      // Wait for useMe to refetch BEFORE navigating
-      await queryClient.invalidateQueries({ 
+      await queryClient.refetchQueries({
         queryKey: queryKeys.me,
-        refetchType: "all", // ← force immediate refetch
       });
+
       navigate("/chat-panel");
-    },
+    }
   });
 };
 
