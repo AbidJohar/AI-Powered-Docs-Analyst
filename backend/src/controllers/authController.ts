@@ -15,7 +15,15 @@ export const googleLogin = async (req: Request, res: Response) => {
         const result = await googleLoginService(req.body);
         if (result.user) await issueTokenCookies(res, result.user);
 
-        return res.status(result.status).json(result.body);
+        return res.status(200).json({
+            success: true,
+            message: "user login successfully",
+            user: {
+                name: result.user?.name,
+                email: result.user?.email,
+                avatar: result.user?.avatar
+            }
+        });
     } catch (err: any) {
         return res.status(500).json({ success: false, message: err.message || "Failed to login." });
     }
@@ -29,12 +37,26 @@ export const refreshToken = async (req: Request, res: Response) => {
     console.log(" refreshToken in cookie:", req.cookies.refreshToken); // ← add this
     try {
         const token = req.cookies?.refreshToken;
+         if (!token) {
+            return {
+              status: 401,
+              body: { success: false, message: "No refresh token." },
+            };
+          }
 
         const result = await refreshTokenService(token);
 
         if (result.user) await issueTokenCookies(res, result.user);
 
-        return res.status(result.status).json(result.body);
+        return res.status(200).json({
+            success: true,
+            message: "Token refresehed",
+            user: {
+                name: result.user?.name,
+                email: result.user?.email,
+                avatar: result.user?.avatar
+            }
+        });
     } catch (err: any) {
         return res.status(500).json({ success: false, message: err.message || "Failed to refresh token." });
     }

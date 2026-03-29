@@ -13,7 +13,8 @@ export const useMe = () => {
     queryFn: getMeApi,
     // select allows you to transform the data before returning it
     select: (response) => response?.data ?? null, // only return the 'data' property
-    retry: false,                // ← no retries on failure
+    retry: false,
+    staleTime: 0,              // ← no retries on failure
     refetchOnWindowFocus: false, // ← no refetch on tab switch
     refetchOnMount: true,       // ← no refetch on remount
   });
@@ -40,13 +41,13 @@ export const useGoogleLogin = () => {
 // ─── Logout ───────────────────────────────────────────────────
 export const useLogout = () => {
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
   return useMutation({
     mutationFn: logoutApi,
     onSuccess: () => {
       queryClient.clear(); // clear ALL cached data
-      navigate("/");
+      window.location.href = "/";
     },
   });
 };

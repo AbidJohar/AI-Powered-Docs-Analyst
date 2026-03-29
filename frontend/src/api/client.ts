@@ -1,4 +1,4 @@
- import axios from "axios";
+import axios from "axios";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -30,8 +30,15 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    console.log("Error in interceptors:",error);
-    console.log("origingal Reuqest:",originalRequest);
+    console.log("Error in interceptors:", error);
+    console.log("origingal Reuqest:", originalRequest);
+    // ─── Skip interceptor for auth-check endpoint ────────────
+    // if /my-profile 401s, it just means user is not logged in
+    // let it fail naturally so useMe → isError: true → isLoading: false
+    const isAuthCheck = originalRequest.url?.includes("/auth/my-profile");
+    if (isAuthCheck) {
+      return Promise.reject(error); // ← pass straight through, no refresh attempt
+    }
 
     // Only retry if status is 401 and it's not a retry already
     if (error.response?.status === 401 && !originalRequest._retry) {

@@ -46,7 +46,7 @@ export const deleteDocumentService = async (id: string, userId: string) => {
   });
 
   if (result.count === 0) {
-    return null;
+    return false;
   }
 
   return true;

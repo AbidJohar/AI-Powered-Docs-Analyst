@@ -14,6 +14,7 @@ import {
   answerQuestion,
 } from '../services/geminiService';
 import { AskQuestionBody, AuthRequest } from '../types';
+import { checkAndIncrementQuestion, checkAndIncrementUpload } from '../services/usageservice';
 
 
 // ─────────────────────────────────────────────────────────────
@@ -37,6 +38,8 @@ export const uploadDocument = async (
       res.status(400).json({ success: false, error: 'No file uploaded' });
       return;
     }
+
+    await checkAndIncrementUpload(userId);
 
     const { originalname, path: filePath, mimetype, size } = req.file;
 
@@ -140,8 +143,12 @@ export const deleteDocument = async (req: Request, res: Response, next: NextFunc
         if (!userId) return res.status(401).json({ success: false, message: "Unauthorized" });
 
         const result = await deleteDocumentService(req.params.id, userId);
-        
-        return res.status(200).json({success: result, message: "Document deleted successfully"});
+
+        if(!result){
+           return res.status(404).json({success: result, message: "Document not found"});
+        }
+         return res.status(200).json({success: result, message: "Document deleted successfully"}); 
+       
     } catch (err: any) {
         next(err); // Pass to global error handler
     }
@@ -170,6 +177,8 @@ export const askQuestion = async (
       res.status(400).json({ success: false, error: 'document_id and question are required' });
       return;
     }
+
+    await checkAndIncrementQuestion(userId);
 
     const document = await getDocumentById(document_id, userId);
     if (!document) {

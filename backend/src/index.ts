@@ -9,6 +9,7 @@ import { prisma } from "./config/db"
 import env from "./config/env";
 import cookieParser from "cookie-parser";
 import morgan from "morgan";
+import usageRoutes from "./routes/usageRoutes";
 
 
 
@@ -34,6 +35,7 @@ app.use(cookieParser())
 //  ROUTES STARTING POINT
 // ─────────────────────────────────────────────────────────────
 app.use('/api', documentRoutes);
+app.use('/api', usageRoutes);
 app.use('/api/auth', authRoutes);
 
 // Health check

@@ -48,8 +48,8 @@ const attachAccessCookie = (res: Response, token: string) => {
         httpOnly: true,
         secure: env.nodeEnv === "production",
         sameSite: env.nodeEnv === "production" ? "none" : "lax",
-        // maxAge: 15 * 60 * 1000, // 15 minutes
-        maxAge: 2 * 60 * 1000, // 2 minutes
+        maxAge: 15 * 60 * 1000, // 15 minutes
+        // maxAge: 2 * 60 * 1000, // 2 minutes (for testing )
         path: "/",
     });
 }
@@ -60,8 +60,8 @@ const attachRefreshCookie = (res: Response, token: string) => {
         httpOnly: true,
         secure: env.nodeEnv === "production",
         sameSite: env.nodeEnv === "production" ? "none" : "lax",
-        // maxAge: 1000 * 60 * 60 * 24 * 5, // 5 days
-        maxAge: 1000 * 60 * 5, // 5 mins
+        maxAge: 1000 * 60 * 60 * 24 * 5, // 5 days
+        // maxAge: 1000 * 60 * 5, // 5 mins ( for testing )
         path: "/api/auth/refresh",
     });
 }

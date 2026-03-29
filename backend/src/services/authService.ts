@@ -53,17 +53,7 @@ export const googleLoginService = async ({ code }: { code: string }) => {
     }
 
     return {
-      user,
-      status: 200,
-      body: {
-        success: true,
-        message: "Login successful.",
-        user: {
-          name: user.name,
-          email: user.email,
-          avatar: user.avatar,
-        },
-      },
+      user
     };
   } catch (err) {
     console.error("Google login error:", err);
@@ -79,13 +69,7 @@ export const googleLoginService = async ({ code }: { code: string }) => {
 // ─────────────────────────────────────────────────────────────
 
 export const refreshTokenService = async (token: string) => {
-  if (!token) {
-    return {
-      status: 401,
-      body: { success: false, message: "No refresh token." },
-    };
-  }
-
+ 
   let payload: { id: string };
   try {
     payload = jwt.verify(
@@ -124,17 +108,7 @@ export const refreshTokenService = async (token: string) => {
   }
 
   return {
-    status: 200,
-    user,
-    body: {
-      success: true,
-      message: "Tokens refreshed.",
-      user: {
-        name: user.name,
-        email: user.email,
-        avatar: user.avatar,
-      },
-    },
+    user
   };
 };
 

@@ -20,7 +20,7 @@ const DocumentHeader: React.FC<DocumentHeaderProps> = ({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const { user } = useAuth();
-  const {mutate : upload, isPending : isUploading, isError, error} = useUploadDocument();
+  const { mutate: upload, isPending: isUploading, isError, error } = useUploadDocument();
   const { mutate: logout, isPending: isLoggingOut } = useLogout();
 
   const [showShare, setShowShare] = useState(false);
@@ -41,21 +41,21 @@ const DocumentHeader: React.FC<DocumentHeaderProps> = ({
 
 
   useEffect(() => {
-      if (!isError || !error) return;
-      const status = (error as any)?.response?.status;
-      const message = (error as any)?.response?.data?.message;
-  
-      if (status === 429) {
-        toast.error(message, {
-          style: {
-            background: "#1a0a0a",
-            border: "1px solid #ef444430",
-            color: "#f87171",
-          },
-          icon: "🚫",
-        });
-      }
-    }, [isError, error]);
+    if (!isError || !error) return;
+    const status = (error as any)?.response?.status;
+    const message = (error as any)?.response?.data?.message;
+
+    if (status === 429) {
+      toast.error(message, {
+        style: {
+          background: "#1a0a0a",
+          border: "1px solid #ef444430",
+          color: "#f87171",
+        },
+        icon: "🚫",
+      });
+    }
+  }, [isError, error]);
 
 
   const handleUpload = () => {
@@ -117,7 +117,7 @@ const DocumentHeader: React.FC<DocumentHeaderProps> = ({
           className="flex items-center gap-1.5 px-3 py-1.5 hover:rounded-lg text-slate-400 text-xs font-medium hover:bg-white/5 hover:text-slate-200 border border-transparent hover:border-white/10 transition-all"
         >
           {isUploading ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
-          <span className="hidden sm:inline">{isUploading ? "Uploading..." : "Open Upload"}</span>
+          <span className="hidden sm:inline">{isUploading ? "Uploading..." : "Upload file"}</span>
         </button>
 
         <div className="h-5 w-px bg-white/10" />

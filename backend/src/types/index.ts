@@ -45,3 +45,11 @@ export interface AuthRequest extends Request {
     id: string;
   };
 }
+
+
+export interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  avatar: string | null;
+}

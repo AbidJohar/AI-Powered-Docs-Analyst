@@ -49,11 +49,17 @@ export const listDocumentsApi = async (page: number = 1) => {
   return data;
 };
 
-// Get single document
+// Get document by id
 export const getDocumentApi = async (id: string) => {
   const { data } = await api.get(`/documents/${id}`);
   return data;
 };
+
+// delete document by id
+export const deleteDocumentApi = async (id: string) => {
+  const {data} = await api.delete(`/documents/${id}`);
+  return data;
+}
 
 // Ask a question about a document
 export const askQuestionApi = async (document_id: string, question: string) => {
@@ -64,5 +70,13 @@ export const askQuestionApi = async (document_id: string, question: string) => {
 // Get Q&A history for a document
 export const getHistoryApi = async (document_id: string) => {
   const { data } = await api.get(`/history/${document_id}`);
+  return data;
+};
+
+
+// ----------( usage APIs )-------------
+
+export const getUsageApi = async () => {
+  const { data } = await api.get("/get-states");
   return data;
 };

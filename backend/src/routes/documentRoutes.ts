@@ -51,8 +51,10 @@ router.get('/documents/:id', authMiddleware, getDocument);
 // Delete a single document
 router.delete('/documents/:id', authMiddleware, deleteDocument);
  
+// ask question
 router.post('/ask', authMiddleware, askQuestion);
 
+// get history of the document questions
 router.get('/history/:document_id', authMiddleware, getHistory);
 
 export default router;
