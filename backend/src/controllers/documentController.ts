@@ -14,7 +14,7 @@ import {
   answerQuestion,
 } from '../services/geminiService';
 import { AskQuestionBody, AuthRequest } from '../types';
-import { checkAndIncrementQuestion, checkAndIncrementUpload } from '../services/usageservice';
+import { checkAndIncrementQuestion, checkAndIncrementUpload, checkQuestionLimit } from '../services/usageservice';
 
 
 // ─────────────────────────────────────────────────────────────
@@ -72,7 +72,7 @@ export const uploadDocument = async (
 // ─────────────────────────────────────────────────────────────
 //  DOCUMENT LIST
 // ─────────────────────────────────────────────────────────────
-  
+
 export const listDocuments = async (
   req: Request,
   res: Response,
@@ -138,20 +138,20 @@ export const getDocument = async (
 // ─────────────────────────────────────────────────────────────
 
 export const deleteDocument = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-        const userId = (req as AuthRequest).user?.id;
-        if (!userId) return res.status(401).json({ success: false, message: "Unauthorized" });
+  try {
+    const userId = (req as AuthRequest).user?.id;
+    if (!userId) return res.status(401).json({ success: false, message: "Unauthorized" });
 
-        const result = await deleteDocumentService(req.params.id, userId);
+    const result = await deleteDocumentService(req.params.id, userId);
 
-        if(!result){
-           return res.status(404).json({success: result, message: "Document not found"});
-        }
-         return res.status(200).json({success: result, message: "Document deleted successfully"}); 
-       
-    } catch (err: any) {
-        next(err); // Pass to global error handler
+    if (!result) {
+      return res.status(404).json({ success: result, message: "Document not found" });
     }
+    return res.status(200).json({ success: result, message: "Document deleted successfully" });
+
+  } catch (err: any) {
+    next(err); // Pass to global error handler
+  }
 };
 
 
@@ -171,14 +171,16 @@ export const askQuestion = async (
     }
 
     const { document_id, question } = req.body as AskQuestionBody;
-    // console.log("question and id:", question, " ", document_id);
+
+    // check limit BEFORE doing any work (don't let them proceed if already at limit)
+    // but DON'T increment yet
+    await checkQuestionLimit(userId);
 
     if (!document_id || !question) {
       res.status(400).json({ success: false, error: 'document_id and question are required' });
       return;
     }
 
-    await checkAndIncrementQuestion(userId);
 
     const document = await getDocumentById(document_id, userId);
     if (!document) {
@@ -189,8 +191,12 @@ export const askQuestion = async (
 
     // Re-extract text from saved file
     const content = await extractTextFromFile(document.filePath, document.fileType);
+    console.log("content of pdf:",content);
+
     const answer = await answerQuestion(content, question, document.filename);
 
+    // only increment AFTER Gemini succeeds
+    await checkAndIncrementQuestion(userId);
     // Save Q&A to history
     const query = await saveQuery(document_id, question, answer);
 

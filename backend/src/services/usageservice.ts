@@ -48,6 +48,26 @@ export const checkAndIncrementQuestion = async (userId: string) => {
   });
 };
 
+
+// ─── CHECK ONLY — limit reach ─────────────────────────
+export const checkQuestionLimit = async (userId: string) => {
+  const log = await getOrCreateUsageLog(userId);
+
+  if (log.questionCount >= LIMITS.questionsPerDay) {
+    const err = new Error(`Daily question limit reached. You can ask ${LIMITS.questionsPerDay} questions per day.`);
+    (err as any).code = 429;
+    throw err;
+  }
+};
+
+// ─── INCREMENT ONLY — call after success ─────────────────────
+export const incrementQuestion = async (userId: string) => {
+  await prisma.usageLog.update({
+    where: { userId_date: { userId, date: today() } },
+    data: { questionCount: { increment: 1 } },
+  });
+};
+
 // ─── get usage for frontend ───────────────────────────────────
 export const getUserUsage = async (userId: string) => {
   const log = await getOrCreateUsageLog(userId);

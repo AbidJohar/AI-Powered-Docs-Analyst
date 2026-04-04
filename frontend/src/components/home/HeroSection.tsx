@@ -122,10 +122,14 @@ const HeroSection: React.FC = () => {
                 </div>
 
                 <h1 className="mb-6 text-6xl md:text-8xl font-extrabold tracking-tighter">
-                    <span className="b  text-white/50 [text-shadow:0_4px_8px_rgba(0,0,0,0.5)]">
+                    <span 
+                    style={{ fontSize: "clamp(1.8rem, 4vw, 2.8rem)", fontWeight: 800, fontFamily: "'Syne', sans-serif", margin: "0 0 1rem", lineHeight: 1.15 }}
+                    className="b  text-white/50 [text-shadow:0_4px_8px_rgba(0,0,0,0.5)]">
                         Analysis at the
                     </span> <br />
-                    <span className="text-transparent bg-clip-text bg-linear-to-r from-cyan-400 via-blue-500 to-purple-600">
+                    <span
+                    style={{fontSize: "clamp(1.8rem, 4vw, 2.8rem)", fontWeight: 800}}
+                    className="text-transparent bg-clip-text bg-linear-to-r from-cyan-400 via-blue-500 to-purple-600">
                         Speed of Thought.
                     </span>
                 </h1>

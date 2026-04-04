@@ -24,7 +24,6 @@ const DocumentPage = () => {
         // ─── handle ALL errors inline here, not in useEffect ───
         // onError fires right when mutation fails with full error access
         onError: (err: any) => {
-          const status = err?.response?.status;
           const data = err?.response?.data;
 
           // read both fields — works regardless of which one backend sends

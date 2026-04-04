@@ -21,7 +21,7 @@ const DocumentHeader: React.FC<DocumentHeaderProps> = ({
   const navigate = useNavigate();
   const { user } = useAuth();
   const { mutate: upload, isPending: isUploading, isError, error } = useUploadDocument();
-  const { mutate: logout, isPending: isLoggingOut } = useLogout();
+  // const { mutate: logout, isPending: isLoggingOut } = useLogout();
 
   const [showShare, setShowShare] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -205,7 +205,7 @@ const DocumentHeader: React.FC<DocumentHeaderProps> = ({
             </span>
           </div>
 
-          {/* Logout */}
+          {/* Logout
           <button
             onClick={() => logout()}
             disabled={isLoggingOut}
@@ -213,7 +213,7 @@ const DocumentHeader: React.FC<DocumentHeaderProps> = ({
             className="p-1.5 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 border border-transparent hover:border-red-500/20 transition-all"
           >
             <LogOut size={14} />
-          </button>
+          </button> */}
         </div>
 
       </div>

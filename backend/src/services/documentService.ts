@@ -18,7 +18,7 @@ export const getAllDocuments = async (page: number, limit: number, userId: strin
 
   const [documents, total] = await Promise.all([
     prisma.document.findMany({
-      where: { userId },   // ← only this user's docs
+      where: { userId },   // only this user's docs
       orderBy: { createdAt: 'desc' },
       include: { summaries: true },
       skip,

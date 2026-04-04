@@ -11,12 +11,12 @@ import { prisma } from "../config/db";
 const SALT_ROUNDS = 8;
 
 const generateAccessToken = (id: string) =>
-    jwt.sign({ id }, env.jwtAccessSecret, {
+    jwt.sign({ id }, env.jwtAccessSecret as jwt.Secret, {
         expiresIn: env.jwtAccessExpireIn as jwt.SignOptions["expiresIn"],
     });
 
 const generateRefreshToken = (id: string) =>
-    jwt.sign({ id }, env.jwtRefreshSecret, {
+    jwt.sign({ id }, env.jwtRefreshSecret as jwt.Secret, {
         expiresIn: env.jwtRefresExpireIn as jwt.SignOptions["expiresIn"],
     });
 
@@ -62,7 +62,7 @@ const attachRefreshCookie = (res: Response, token: string) => {
         sameSite: env.nodeEnv === "production" ? "none" : "lax",
         maxAge: 1000 * 60 * 60 * 24 * 5, // 5 days
         // maxAge: 1000 * 60 * 5, // 5 mins ( for testing )
-        path: "/api/auth/refresh",
+        path: "/api/v1/auth/refresh",
     });
 }
 

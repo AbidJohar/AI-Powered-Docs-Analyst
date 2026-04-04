@@ -24,8 +24,8 @@ const UsageBar = ({ label, used, limit }: { label: string; used: number; limit: 
   return (
     <div>
       <div className="flex justify-between items-center mb-1">
-        <span className={`text-[11px] ${color}`}>{label}</span>
-        <span className={`text-[11px] font-medium ${color}`}>{used} / {limit}</span>
+        <span className={`text-[10px] ${color}`}>{label}</span>
+        <span className={`text-[10px] font-medium ${color}`}>{used} / {limit}</span>
       </div>
       <div className="h-0.75 bg-white/5 rounded-full overflow-hidden">
         <div

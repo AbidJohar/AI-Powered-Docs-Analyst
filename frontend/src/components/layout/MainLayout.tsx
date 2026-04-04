@@ -5,8 +5,14 @@ import HistoryPanel from "../document/HistoryPanel";
 import DocumentHeader from "../document/DocumentHeader";
 
 const MainLayout = () => {
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
+    const [activeDocumentId, setActiveDocumentId] = useState<string | undefined>();
     const navigate = useNavigate();
+
+    const handleSelectDocument = (id: string) => {
+        setActiveDocumentId(id);
+        navigate(`/chat-panel/${id}`);
+    };
 
     return (
         <div className="flex h-screen w-full bg-[#08060d] text-slate-300 font-sans overflow-hidden">
@@ -35,7 +41,8 @@ const MainLayout = () => {
                     <div className="flex-1  overflow-y-auto  no-scrollbar">
                         <HistoryPanel
                             showFull={isSidebarOpen}
-                            onSelectDocument={(id) => navigate(`/chat-panel/${id}`)}
+                            onSelectDocument={handleSelectDocument}
+                            activeDocumentId={activeDocumentId}    
                         />
                     </div>
                 </div>

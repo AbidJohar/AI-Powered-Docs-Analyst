@@ -1,12 +1,14 @@
-import { FileText, Loader2, MessageSquare, Trash2 } from "lucide-react";
+import { FileText, Loader2, LogOut, MessageSquare, Trash2 } from "lucide-react";
 import { useDocuments, useDeleteDocument, useUsage } from "../../hooks/useDocuments";
 import UsageBar from "../UsageBar";
+import { useLogout } from "../../hooks/useAuth";
 
 interface HistoryPanelProps {
   showFull: boolean;
   activeDocumentId?: string;
   onSelectDocument: (id: string) => void;
 }
+
 
 // ─── Main component ───────────────────────────────────────────
 const HistoryPanel: React.FC<HistoryPanelProps> = ({
@@ -16,9 +18,11 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
 }) => {
   const { data, isLoading, isError, fetchNextPage, hasNextPage, isFetchingNextPage } = useDocuments();
   const { mutate: deleteDocument, isPending, variables } = useDeleteDocument();
-  const { data: usage } = useUsage();  
+  const { data: usage } = useUsage();
+  const { mutate: logoutApi, isPending: isLoginggout } = useLogout();
 
   const documents = data?.pages.flatMap((page) => page.data) ?? [];
+
 
   if (isLoading) {
     return (
@@ -39,7 +43,7 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
     <div className="flex flex-col h-full">
 
       {/* ── document list ── */}
-      <div className="flex-1 px-3 space-y-1 overflow-y-auto">
+      <div className="flex-1 px-3 space-y-1 overflow-y-auto hide-scrollbar">
         {showFull && (
           <p className="px-3 pb-1 text-[10px] uppercase tracking-widest text-slate-600 font-semibold">
             Documents
@@ -60,10 +64,11 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
               key={doc.id}
               className={`
                 group w-full flex items-center gap-3 rounded-lg transition-colors
-                ${!showFull ? "justify-center py-4" : "px-3 py-3"}
-                ${isActive
-                  ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
-                  : "hover:bg-white/5 text-slate-400"}
+                ${!showFull ? "justify-center py-4 " : "px-3 py-3 hover:bg-cyan-700/20"}
+                  ${isActive
+                && "bg-cyan-500/40 text-cyan-400 border border-cyan-500/20"
+                }
+               
               `}
             >
               <button
@@ -120,28 +125,38 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
         </div>
       )}
 
+      {showFull ? (
+        <button
+          onClick={() => logoutApi()}
+          disabled={isLoginggout}
+          className="mx-3 mb-3 mt-2 w-[calc(100%-24px)] flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-white/80 bg-red-700 hover:text-white border border-white/5 hover:border-red-500/20 transition-all text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isLoginggout ? (
+            <Loader2 size={15} className="animate-spin shrink-0" />
+          ) : (
+            <LogOut size={15} className="shrink-0" />
+          )}
+          <span>Logout</span>
+        </button>
+      ) : (
+        // collapsed sidebar — icon only
+        <button
+          onClick={() => logoutApi()}
+          disabled={isLoginggout}
+          title="Logout"
+          className="mx-auto mb-3 mt-2 flex items-center justify-center p-2.5 rounded-lg text-slate-400 hover:bg-red-500/10 hover:text-red-400 border border-white/5 hover:border-red-500/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isLoginggout ? (
+            <Loader2 size={15} className="animate-spin" />
+          ) : (
+            <LogOut size={15} />
+          )}
+        </button>
+      )}
+
     </div>
   );
 };
 
 export default HistoryPanel;
 
-// ```
-
-// The counts update automatically after every action:
-// ```
-// user uploads doc
-//       ↓
-// useUploadDocument onSuccess
-//       ↓
-// invalidates ["usage"] + ["documents"]
-//       ↓
-// useUsage refetches → new counts → UsageBar re-renders ✓
-
-// user asks question
-//       ↓
-// useAskQuestion onSuccess
-//       ↓
-// invalidates ["usage"] + ["history"]
-//       ↓
-// useUsage refetches → questions count ticks up ✓

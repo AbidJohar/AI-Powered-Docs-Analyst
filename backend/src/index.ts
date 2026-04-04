@@ -10,6 +10,8 @@ import env from "./config/env";
 import cookieParser from "cookie-parser";
 import morgan from "morgan";
 import usageRoutes from "./routes/usageRoutes";
+import helmet from "helmet";
+import apiLimiter from "./middleware/rateLimit"
 
 
 
@@ -20,23 +22,27 @@ const PORT = process.env.PORT || 3000;
 // ─────────────────────────────────────────────────────────────
 //  MIDDLEWARE
 // ─────────────────────────────────────────────────────────────
+
+app.use(helmet());
 app.use(cors({
   origin: env.frontendurl, // add your's website domain in .env
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
-app.use(morgan("dev"))
+app.use(morgan("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser())
+app.use(cookieParser());
+app.use("/api", apiLimiter)
+
 
 // ─────────────────────────────────────────────────────────────
 //  ROUTES STARTING POINT
 // ─────────────────────────────────────────────────────────────
-app.use('/api', documentRoutes);
-app.use('/api', usageRoutes);
-app.use('/api/auth', authRoutes);
+app.use(`/api/${env.version}`, documentRoutes);
+app.use(`/api/${env.version}`, usageRoutes);
+app.use(`/api/${env.version}/auth`, authRoutes);
 
 // Health check
 app.get('/health', (req: Request, res: Response) => {
