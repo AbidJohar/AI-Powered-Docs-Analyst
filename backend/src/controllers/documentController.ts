@@ -191,8 +191,6 @@ export const askQuestion = async (
 
     // Re-extract text from saved file
     const content = await extractTextFromFile(document.filePath, document.fileType);
-    console.log("content of pdf:",content);
-
     const answer = await answerQuestion(content, question, document.filename);
 
     // only increment AFTER Gemini succeeds

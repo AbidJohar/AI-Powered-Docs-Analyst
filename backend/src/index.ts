@@ -54,7 +54,14 @@ app.use(errorHandler);
 
 // Start server
 const start = async () => {
-  await prisma.$connect();
+  // test DB connection
+  try {
+    await prisma.$connect()
+    console.log('Database connected successfully ')
+  } catch (error) {
+    console.error('Database connection failed:', error)
+    process.exit(1) // crash intentionally so you know it failed
+  }
   app.listen(PORT as number, () => {
     console.log(`Server running at http://localhost:${PORT}`);
   });

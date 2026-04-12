@@ -34,7 +34,6 @@ export const googleLogin = async (req: Request, res: Response) => {
 // ─────────────────────────────────────────────────────────────
 
 export const refreshToken = async (req: Request, res: Response) => {
-    console.log(" refreshToken in cookie:", req.cookies.refreshToken); // ← add this
     try {
         const token = req.cookies?.refreshToken;
          if (!token) {

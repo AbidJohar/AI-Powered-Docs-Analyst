@@ -11,16 +11,28 @@ const WORD_TO_NUM: Record<string, number> = {
   eleven: 11, twelve: 12, thirteen: 13, fourteen: 14, fifteen: 15,
 };
 
+// const CONTENT_LIMITS = {
+//   summary:         15000,
+//   mcq:             15000,
+//   questions:       15000,
+//   explain:         20000,
+//   compare:         15000,
+//   extract:         15000,
+//   general_teacher: 20000,
+//   general_analyst: 20000,
+//   summarize:       15000,
+// };
+
 const CONTENT_LIMITS = {
-  summary:         15000,
-  mcq:             15000,
-  questions:       15000,
-  explain:         20000,
-  compare:         15000,
-  extract:         15000,
-  general_teacher: 20000,
-  general_analyst: 20000,
-  summarize:       15000,
+  summary:         100000,  // needs full doc overview — worth the wait
+  mcq:             60000,   // needs variety across doc
+  questions:       60000,   // same
+  explain:         40000,   // focused topic, less needed
+  compare:         50000,   // needs enough context
+  extract:         80000,   // needs to search widely
+  general_teacher: 40000,   // conversational, less context needed
+  general_analyst: 60000,   // analysis needs more context
+  summarize:       100000,  // same as summary
 };
 
 export const sliceContent = (content: string, limit: number): string =>

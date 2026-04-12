@@ -123,7 +123,7 @@ async function extractExcelStreamed(filePath: string): Promise<string> {
 
 export const summarizeDocument = async (content: string, filename: string): Promise<any> => {
   try {
-    const prompt = buildSummaryPrompt(content, filename);
+    const prompt = buildSummaryPrompt(content, filename); 
     return await generateWithFallback(prompt);
   } catch (error: any) {
     handleGeminiError(error);

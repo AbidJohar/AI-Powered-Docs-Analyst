@@ -172,8 +172,8 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ isSidebarOpen, documentId }) => {
               onKeyDown={handleKeyDown}
               disabled={isPending}
               rows={1}
-              className="w-full bg-[#16171d] border border-white/10 rounded-2xl py-4 px-6 pr-14 text-white focus:outline-none focus:border-cyan-500/50 placeholder:text-slate-600 disabled:opacity-50 transition-colors resize-none overflow-hidden leading-relaxed"
-              placeholder="Ask a question about the document…"
+              className="w-full bg-[#16171d] border border-white/10 rounded-2xl py-4 px-6 pr-14  text-white focus:outline-none focus:border-cyan-500/50 placeholder:text-slate-600 disabled:opacity-50 transition-colors resize-none overflow-hidden leading-relaxed"
+              placeholder="Ask a query about the doc..."
             />
             <button
               onClick={handleSend}

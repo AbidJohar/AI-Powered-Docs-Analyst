@@ -2,8 +2,8 @@ import rateLimit from "express-rate-limit";
 import { Request, Response } from "express";
 
 const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  limit: 100,               // max requests per window
+  windowMs: 10 * 60 * 1000, // 10 minutes
+  limit: 200,               // max requests per window
   standardHeaders: "draft-7",
   legacyHeaders: false,
   message: (req: Request, res: Response) => {
