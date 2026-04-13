@@ -22,10 +22,10 @@ for (const key of requiredEnvVars) {
 
 const env = {
     databaseUrl: process.env.DATABASE_URL,
-    jwtAccessSecret: process.env.JWT_ACESSTOKEN_SECRET,
-    jwtRefreshSecret: process.env.JWT_REFRESHTOKEN_SECRET,
+    jwtAccessSecret: process.env.JWT_ACESSTOKEN_SECRET!,
+    jwtRefreshSecret: process.env.JWT_REFRESHTOKEN_SECRET!,
     googleClientId: process.env.GOOGLE_CLIENT_ID,
-    googleClientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    googleClientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     geminikey1: process.env.GEMINI_API_KEY_1,
     geminikey2: process.env.GEMINI_API_KEY_2,
     geminikey3: process.env.GEMINI_API_KEY_3,
