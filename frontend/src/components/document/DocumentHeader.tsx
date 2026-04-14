@@ -1,9 +1,8 @@
 import React, { useRef, useState, useEffect } from "react";
-import { Menu, Share2, Copy, Check, X, Home, LogOut, Loader2, Plus } from "lucide-react";
-// import { useUploadDocument } from "../../hooks/useDocuments";
+import { Menu, Share2, Copy, Check, X, Home, Loader2, Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { useLogout } from "../../hooks/useAuth";
+
 import { useUploadDocument } from "../../hooks/useDocuments";
 import { toast } from "sonner";
 

@@ -7,7 +7,7 @@ const LoginPage = () => {
 
     const login = useGoogleLogin({
         onSuccess: (response) => {
-            // console.log("Response:", response);
+            console.log("Response:", response);
             googleLogin(response.code)
         },
         flow: "auth-code",

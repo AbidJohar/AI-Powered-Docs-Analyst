@@ -30,8 +30,8 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    console.log("Error in interceptors:", error);
-    console.log("origingal Reuqest:", originalRequest);
+    // console.log("Error in interceptors:", error);
+    // console.log("origingal Reuqest:", originalRequest);
     // ─── Skip interceptor for auth-check endpoint ────────────
     // if /my-profile 401s, it just means user is not logged in
     // let it fail naturally so useMe → isError: true → isLoading: false

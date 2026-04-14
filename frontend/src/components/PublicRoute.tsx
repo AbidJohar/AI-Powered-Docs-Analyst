@@ -4,8 +4,8 @@ import { useAuth } from "../context/AuthContext";
 
 const PublicRoute = () => {
     const { isAuthenticated, isLoading } = useAuth();
-    console.log("isAuthenticated:", isAuthenticated);
-    console.log("isLoading:", isLoading);
+    // console.log("isAuthenticated:", isAuthenticated);
+    // console.log("isLoading:", isLoading);
 
 
     if (isLoading) return (

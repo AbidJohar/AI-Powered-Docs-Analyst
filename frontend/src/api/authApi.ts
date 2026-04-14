@@ -28,7 +28,7 @@ export const refreshTokenApi = async () => {
 
 export const logoutApi = async () => {
     const { data } = await authApi.get("/auth/logout");
-    console.log("logout data:", data);
+    // console.log("logout data:", data);
 
     return data;
 };
