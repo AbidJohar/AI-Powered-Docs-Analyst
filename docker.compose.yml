@@ -1,0 +1,51 @@
+services:
+  api:
+    image: abidjohar/docanalyst-server:latest
+    container_name: docanalyst-api
+    restart: always
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    env_file:
+      - .env
+    networks:
+      - appnet
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  nginx:
+    image: nginx:alpine
+    container_name: docanalyst-nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    depends_on:
+      - api
+    networks:
+      - appnet
+
+  certbot:
+    image: certbot/certbot
+    container_name: docanalyst-certbot
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    command: certonly --webroot
+      --webroot-path=/var/www/certbot
+      --email abidjohar786@gmail.com
+      --agree-tos
+      --no-eff-email
+      -d 3.95.89.54.nip.io
+
+networks:
+  appnet:
+    driver: bridge
