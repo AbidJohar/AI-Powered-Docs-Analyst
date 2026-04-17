@@ -1,0 +1,86 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Document {
+  id        String   @id @default(uuid())
+  filename  String
+  filePath  String
+  fileType  String
+  sizeBytes Int
+  createdAt DateTime @default(now())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  summaries Summary[]
+  queries   Query[]
+
+  @@index([userId])
+  @@map("documents")
+}
+
+model Summary {
+  id          String   @id @default(uuid())
+  documentId  String
+  summaryText String   @db.Text
+  createdAt   DateTime @default(now())
+  document    Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@map("summaries")
+}
+
+model Query {
+  id         String   @id @default(uuid())
+  documentId String
+  question   String   @db.Text
+  answer     String   @db.Text
+  askedAt    DateTime @default(now())
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@index([documentId])
+  @@map("queries")
+}
+
+
+
+model User {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  name         String
+  avatar       String?
+  googleId     String    @unique
+
+  refreshToken String?   @db.Text
+
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  documents    Document[]
+  usageLogs    UsageLog[]
+
+  @@map("users")
+}
+
+
+model UsageLog {
+  id            String   @id @default(uuid())
+  userId        String
+  date          String
+  uploadCount   Int      @default(0)
+  questionCount Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@index([userId])        // faster queries when looking up by userId
+  @@map("usage_logs")
+}
+
+ 
