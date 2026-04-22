@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
 const stats = [
-  { value: 22, suffix: "+", label: "Documents Analyzed" },
+  { value: 20, suffix: "+", label: "Docs upload per week" },
   { value: 91, suffix: "%", label: "Accuracy Rate" },
   { value: 4, suffix: "+", label: "File Formats Supported" },
   { value: 15, suffix: "x", label: "Faster Than Manual Review" },

@@ -11,34 +11,87 @@ const WORD_TO_NUM: Record<string, number> = {
   eleven: 11, twelve: 12, thirteen: 13, fourteen: 14, fifteen: 15,
 };
 
-// const CONTENT_LIMITS = {
-//   summary:         15000,
-//   mcq:             15000,
-//   questions:       15000,
-//   explain:         20000,
-//   compare:         15000,
-//   extract:         15000,
-//   general_teacher: 20000,
-//   general_analyst: 20000,
-//   summarize:       15000,
-// };
-
 const CONTENT_LIMITS = {
-  summary:         100000,  // needs full doc overview — worth the wait
-  mcq:             60000,   // needs variety across doc
-  questions:       60000,   // same
-  explain:         40000,   // focused topic, less needed
-  compare:         50000,   // needs enough context
-  extract:         80000,   // needs to search widely
-  general_teacher: 40000,   // conversational, less context needed
-  general_analyst: 60000,   // analysis needs more context
-  summarize:       100000,  // same as summary
+  summary:         100000,
+  mcq:             60000,
+  questions:       60000,
+  explain:         40000,
+  compare:         50000,
+  extract:         80000,
+  general_teacher: 40000,
+  general_analyst: 60000,
+  summarize:       100000,
 };
 
 export const sliceContent = (content: string, limit: number): string =>
   content.slice(0, limit);
 
-// Levenshtein distance for fuzzy matching
+// ─────────────────────────────────────────────────────────────
+//  LANGUAGE DETECTION
+// ─────────────────────────────────────────────────────────────
+
+type SupportedLanguage =
+  | "Urdu"
+  | "Arabic"
+  | "Spanish"
+  | "Chinese"
+  | "English";
+
+/**
+ * Detects the language the user wants a response in.
+ *
+ * Strategy (in order):
+ * 1. Explicit keyword in the question  e.g. "in urdu", "en español", "用中文"
+ * 2. Script detection — Arabic/Urdu Unicode block, CJK block
+ * 3. Fallback → English
+ */
+export const detectLanguage = (question: string): SupportedLanguage => {
+  const q = question.toLowerCase();
+
+  // ── 1. Explicit keyword matching ──────────────────────────
+  const LANGUAGE_KEYWORDS: Record<SupportedLanguage, RegExp> = {
+    Urdu:    /\b(urdu|اردو|in urdu|بالاردو)\b/i,
+    Arabic:  /\b(arabic|عربي|عربى|in arabic|بالعربي|بالعربية)\b/i,
+    Spanish: /\b(spanish|español|espanol|en español|en espanol|castellano)\b/i,
+    Chinese: /\b(chinese|mandarin|中文|普通话|粤语|in chinese|用中文)\b/i,
+    English: /\b(english|in english)\b/i,
+  };
+
+  for (const [lang, pattern] of Object.entries(LANGUAGE_KEYWORDS) as [SupportedLanguage, RegExp][]) {
+    if (pattern.test(question)) return lang;
+  }
+
+  // ── 2. Script / Unicode block detection ───────────────────
+  // Arabic script (covers both Arabic and Urdu written in Nastaliq/Naskh)
+  // We check Urdu-specific characters first (ں ے ۓ ڈ ڑ ٹ پ چ ژ) to separate from pure Arabic
+  const URDU_SPECIFIC   = /[\u06BA\u06BE\u06C1\u06C3\u0688\u0691\u0679\u067E\u0686\u0698]/;
+  const ARABIC_SCRIPT   = /[\u0600-\u06FF\u0750-\u077F]/;
+  const CJK_SCRIPT      = /[\u4E00-\u9FFF\u3400-\u4DBF]/;
+
+  if (URDU_SPECIFIC.test(question))  return "Urdu";
+  if (ARABIC_SCRIPT.test(question))  return "Arabic";
+  if (CJK_SCRIPT.test(question))     return "Chinese";
+
+  // ── 3. Fallback ───────────────────────────────────────────
+  return "English";
+};
+
+/**
+ * Builds the language instruction injected into every prompt.
+ * When English, returns empty string (no instruction needed — default behavior).
+ */
+const languageRule = (lang: SupportedLanguage): string =>
+  lang === "English"
+    ? ""
+    : `\n🌐 LANGUAGE INSTRUCTION (HIGHEST PRIORITY): You MUST write your ENTIRE response in ${lang}. ` +
+      `This includes all headings, labels, explanations, bullet points, table content, and any other text. ` +
+      `Do NOT mix in English unless quoting directly from the source document. ` +
+      `If a technical term has no ${lang} equivalent, you may keep the original term but explain it in ${lang}.\n`;
+
+// ─────────────────────────────────────────────────────────────
+//  LEVENSHTEIN + COUNT EXTRACTION
+// ─────────────────────────────────────────────────────────────
+
 const levenshtein = (a: string, b: string): number => {
   const dp = Array.from({ length: a.length + 1 }, (_, i) =>
     Array.from({ length: b.length + 1 }, (_, j) => (i === 0 ? j : j === 0 ? i : 0))
@@ -90,8 +143,14 @@ Critical rules (highest priority):
 //  TEACHER PROMPTS
 // ─────────────────────────────────────────────────────────────
 
-const teacherMCQPrompt = (content: string, question: string, filename: string): string => {
+const teacherMCQPrompt = (
+  content: string,
+  question: string,
+  filename: string,
+  lang: SupportedLanguage
+): string => {
   const count = extractCount(question, MAX_MCQS);
+  const langInstruction = languageRule(lang);
 
   const exampleFormat = [
     "**Q1. [Question text here]**",
@@ -126,7 +185,7 @@ const teacherMCQPrompt = (content: string, question: string, filename: string): 
   ].join("\n");
 
   return `You are an experienced university professor creating an exam.
-
+${langInstruction}
 Generate exactly ${count} MCQs from "${filename}" using EXACTLY this format with no deviations:
 
 ${exampleFormat}
@@ -146,10 +205,17 @@ ${sliceContent(content, CONTENT_LIMITS.mcq)}
 Student request: ${question}`;
 };
 
-const teacherQuestionsPrompt = (content: string, question: string, filename: string): string => {
+const teacherQuestionsPrompt = (
+  content: string,
+  question: string,
+  filename: string,
+  lang: SupportedLanguage
+): string => {
   const count = extractCount(question, MAX_QUESTIONS);
-  return `You are a university professor preparing exam questions.
+  const langInstruction = languageRule(lang);
 
+  return `You are a university professor preparing exam questions.
+${langInstruction}
 Generate exactly ${count} exam-style questions from "${filename}":
 
 **Q1. [Question]**
@@ -172,9 +238,16 @@ ${sliceContent(content, CONTENT_LIMITS.questions)}
 Student request: ${question}`;
 };
 
-const teacherExplainPrompt = (content: string, question: string, filename: string): string =>
-  `You are a university professor explaining a concept to a student.
+const teacherExplainPrompt = (
+  content: string,
+  question: string,
+  filename: string,
+  lang: SupportedLanguage
+): string => {
+  const langInstruction = languageRule(lang);
 
+  return `You are a university professor explaining a concept to a student.
+${langInstruction}
 **📖 Definition / Overview**
 2-3 sentence plain-language explanation.
 
@@ -199,14 +272,18 @@ Document: "${filename}"
 ${sliceContent(content, CONTENT_LIMITS.explain)}
 ---
 Student question: ${question}`;
+};
 
-// ─────────────────────────────────────────────────────────────
-//  TEACHER GENERAL — catches ALL ambiguous teacher questions
-// ─────────────────────────────────────────────────────────────
+const teacherGeneralPrompt = (
+  content: string,
+  question: string,
+  filename: string,
+  lang: SupportedLanguage
+): string => {
+  const langInstruction = languageRule(lang);
 
-const teacherGeneralPrompt = (content: string, question: string, filename: string): string =>
-  `You are an experienced university professor and academic mentor.
-
+  return `You are an experienced university professor and academic mentor.
+${langInstruction}
 A student has asked you a question about "${filename}". Answer it helpfully using the document.
 
 Format your response clearly using Markdown:
@@ -224,14 +301,22 @@ Document: "${filename}"
 ${sliceContent(content, CONTENT_LIMITS.general_teacher)}
 ---
 Student question: ${question}`;
+};
 
 // ─────────────────────────────────────────────────────────────
 //  ANALYST PROMPTS
 // ─────────────────────────────────────────────────────────────
 
-const analystSummarizePrompt = (content: string, question: string, filename: string): string =>
-  `You are a professional document analyst.
+const analystSummarizePrompt = (
+  content: string,
+  question: string,
+  filename: string,
+  lang: SupportedLanguage
+): string => {
+  const langInstruction = languageRule(lang);
 
+  return `You are a professional document analyst.
+${langInstruction}
 Analyze "${filename}" and provide a structured analytical summary:
 
 **📋 Executive Summary**
@@ -259,10 +344,18 @@ Document: "${filename}"
 ${sliceContent(content, CONTENT_LIMITS.summarize)}
 ---
 Request: ${question}`;
+};
 
-const analystComparePrompt = (content: string, question: string, filename: string): string =>
-  `You are a professional document analyst performing a comparative analysis.
+const analystComparePrompt = (
+  content: string,
+  question: string,
+  filename: string,
+  lang: SupportedLanguage
+): string => {
+  const langInstruction = languageRule(lang);
 
+  return `You are a professional document analyst performing a comparative analysis.
+${langInstruction}
 **📊 Comparison Overview**
 What is being compared and why it matters.
 
@@ -290,10 +383,18 @@ Document: "${filename}"
 ${sliceContent(content, CONTENT_LIMITS.compare)}
 ---
 Request: ${question}`;
+};
 
-const analystExtractPrompt = (content: string, question: string, filename: string): string =>
-  `You are a professional document analyst extracting specific information.
+const analystExtractPrompt = (
+  content: string,
+  question: string,
+  filename: string,
+  lang: SupportedLanguage
+): string => {
+  const langInstruction = languageRule(lang);
 
+  return `You are a professional document analyst extracting specific information.
+${langInstruction}
 **🔍 Extracted Information**
 Present the requested data in the clearest format possible:
 - If it's a list → use bullet points
@@ -315,14 +416,18 @@ Document: "${filename}"
 ${sliceContent(content, CONTENT_LIMITS.extract)}
 ---
 Request: ${question}`;
+};
 
-// ─────────────────────────────────────────────────────────────
-//  ANALYST GENERAL — catches ALL ambiguous analyst questions
-// ─────────────────────────────────────────────────────────────
+const analystGeneralPrompt = (
+  content: string,
+  question: string,
+  filename: string,
+  lang: SupportedLanguage
+): string => {
+  const langInstruction = languageRule(lang);
 
-const analystGeneralPrompt = (content: string, question: string, filename: string): string =>
-  `You are a professional document analyst.
-
+  return `You are a professional document analyst.
+${langInstruction}
 A user has asked you a question about "${filename}". Answer it using the document content.
 
 Format your response clearly using Markdown:
@@ -341,6 +446,7 @@ Document: "${filename}"
 ${sliceContent(content, CONTENT_LIMITS.general_analyst)}
 ---
 Question: ${question}`;
+};
 
 // ─────────────────────────────────────────────────────────────
 //  SUMMARY PROMPT — on upload
@@ -377,18 +483,21 @@ Be clear, structured, and professional.`;
 //  MAIN ROUTER
 // ─────────────────────────────────────────────────────────────
 
-const TEACHER_PROMPTS: Record<TeacherIntent, (c: string, q: string, f: string) => string> = {
+// Updated signature: all prompt functions now accept a SupportedLanguage arg
+type PromptFn = (content: string, question: string, filename: string, lang: SupportedLanguage) => string;
+
+const TEACHER_PROMPTS: Record<TeacherIntent, PromptFn> = {
   mcq:             teacherMCQPrompt,
   questions:       teacherQuestionsPrompt,
   explain:         teacherExplainPrompt,
-  general_teacher: teacherGeneralPrompt,  // ✅ catches all ambiguous teacher questions
+  general_teacher: teacherGeneralPrompt,
 };
 
-const ANALYST_PROMPTS: Record<AnalystIntent, (c: string, q: string, f: string) => string> = {
+const ANALYST_PROMPTS: Record<AnalystIntent, PromptFn> = {
   summarize:       analystSummarizePrompt,
   compare:         analystComparePrompt,
   extract:         analystExtractPrompt,
-  general_analyst: analystGeneralPrompt,  // ✅ catches all ambiguous analyst questions
+  general_analyst: analystGeneralPrompt,
 };
 
 export const buildPrompt = (
@@ -397,12 +506,15 @@ export const buildPrompt = (
   question: string,
   filename: string
 ): string => {
+  // Detect language once, pass to every prompt builder
+  const lang = detectLanguage(question);
+
   const teacherFn = TEACHER_PROMPTS[intent as TeacherIntent];
-  if (teacherFn) return teacherFn(content, question, filename);
+  if (teacherFn) return teacherFn(content, question, filename, lang);
 
   const analystFn = ANALYST_PROMPTS[intent as AnalystIntent];
-  if (analystFn) return analystFn(content, question, filename);
+  if (analystFn) return analystFn(content, question, filename, lang);
 
   // ultimate fallback — never fails
-  return analystGeneralPrompt(content, question, filename);
+  return analystGeneralPrompt(content, question, filename, lang);
 };
