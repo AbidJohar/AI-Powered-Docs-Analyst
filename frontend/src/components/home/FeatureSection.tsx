@@ -46,7 +46,7 @@ const FeatureSection: React.FC = () => {
                     <FeatureCard
                         icon={<Globe size={24} />}
                         title="Multi-Language"
-                        description="Analyze documents in 50+ languages with native-level semantic understanding."
+                        description="Analyze documents in 4+ languages with native-level semantic understanding."
                     />
                     <FeatureCard
                         icon={<Zap size={24} />}

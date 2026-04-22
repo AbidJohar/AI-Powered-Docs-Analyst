@@ -6,7 +6,7 @@ const faqs = [
   { q: "What's the maximum file size?", a: "DocAnalyst supports up to 10MB per file." },
   { q: "Do you offer a free trial?", a: "Yes — its totally free you can upload files and analyze it at anytime" },
   { q: "Can DocAnalyst handle multiple documents at once?", a: "No. its only handle one file at a time" },
-  { q: "What languages are supported?", a: "DocAnalyst currently support 50+ languages for full analysis." },
+  { q: "What languages are supported?", a: "DocAnalyst currently support 4+ languages for full analysis." },
 ];
 
 export default function FAQ() {
